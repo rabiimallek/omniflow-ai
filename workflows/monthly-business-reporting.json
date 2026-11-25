@@ -1,0 +1,692 @@
+{
+  "name": "01 - Monthly Business Reporting",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1232,
+        -32
+      ],
+      "id": "cb32a194-3bcb-4fd2-b141-ddc9dbf470da",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "75ae2153-1f48-4db3-be58-f603dedd4d29",
+              "name": "company_name",
+              "value": "Northstar Business Services",
+              "type": "string"
+            },
+            {
+              "id": "d891e7a4-9330-49af-af74-25077618f305",
+              "name": "reporting_month",
+              "value": "2026-10",
+              "type": "string"
+            },
+            {
+              "id": "1cb05411-2625-4353-9615-1c3caebaf26b",
+              "name": "total_revenue",
+              "value": 125000,
+              "type": "number"
+            },
+            {
+              "id": "6bae87ed-a865-412f-8b71-86c73bf46d43",
+              "name": "total_expenses",
+              "value": 78000,
+              "type": "number"
+            },
+            {
+              "id": "38785a81-758c-4b44-b530-78f3b907b508",
+              "name": "total_invoices",
+              "value": 150,
+              "type": "number"
+            },
+            {
+              "id": "36c17036-3b52-4f60-8162-4d7604decb79",
+              "name": "overdue_invoices",
+              "value": 12,
+              "type": "number"
+            },
+            {
+              "id": "263c4db8-ddb9-4d98-a2b9-b98f6b7f43f2",
+              "name": "completed_projects",
+              "value": 18,
+              "type": "number"
+            },
+            {
+              "id": "6ab364ad-2f8d-470b-ba27-0b2ed33dc425",
+              "name": "active_projects",
+              "value": 7,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -880,
+        128
+      ],
+      "id": "7775da14-765f-48b5-bd06-3c06c6ee98f7",
+      "name": "Prepare Business Data"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1c831ca-122e-410f-adfe-8ad04a82c476",
+              "name": "gross_profit",
+              "value": "={{ $json.total_revenue - $json.total_expenses }}",
+              "type": "number"
+            },
+            {
+              "id": "dd4ab6e0-fc23-4fa6-92a8-86a1114c0e1d",
+              "name": "overdue_invoice_rate",
+              "value": "={{ Number(($json.overdue_invoices / $json.total_invoices * 100).toFixed(2)) }}",
+              "type": "number"
+            },
+            {
+              "id": "8bb919bd-cf51-4a73-86b8-d925cacd97e1",
+              "name": "total_projects",
+              "value": "={{ $json.completed_projects + $json.active_projects }}",
+              "type": "number"
+            },
+            {
+              "id": "53117063-06b2-48f8-b0be-8e3c0bdef54c",
+              "name": "project_completion_rate",
+              "value": "={{ Number(($json.completed_projects / ($json.completed_projects + $json.active_projects) * 100).toFixed(2)) }}",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -688,
+        128
+      ],
+      "id": "c8a9082a-bb8d-4808-a8a7-feb76721febd",
+      "name": "Calculate Business KPIs"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "3ad2e9af-5f73-4d65-ae55-a6842ba1bb19",
+              "leftValue": "={{ $json.total_revenue }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            },
+            {
+              "id": "4888c028-fd0c-444d-95bb-082ecb6c318f",
+              "leftValue": "={{ $json.total_expenses }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "b07aa5c4-1cf4-418f-bead-8eb0348f6aa6",
+              "leftValue": "={{ $json.total_invoices }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            },
+            {
+              "id": "d472fa48-fc2b-4fa2-abec-ad461587d847",
+              "leftValue": "={{ $json.overdue_invoices }}",
+              "rightValue": "={{ $json.total_invoices }}",
+              "operator": {
+                "type": "number",
+                "operation": "lte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        -512,
+        -80
+      ],
+      "id": "00e86904-12a3-415b-8f02-4ae197f4c4e5",
+      "name": "Validate Business Data"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d1354eb8-6e1f-4653-9ee4-a330729f302a",
+              "name": "status",
+              "value": "failed",
+              "type": "string"
+            },
+            {
+              "id": "60c456fb-9e71-4a78-960a-feadcfae92a2",
+              "name": "error_type",
+              "value": "DATA_VALIDATION_ERROR",
+              "type": "string"
+            },
+            {
+              "id": "af4ad132-157d-4023-8991-dfa973bf80b0",
+              "name": "company_name",
+              "value": "={{ $json.company_name }}",
+              "type": "string"
+            },
+            {
+              "id": "ecbcb796-8230-429d-8523-37228c3c7c79",
+              "name": "reporting_month",
+              "value": "={{ $json.reporting_month }}",
+              "type": "string"
+            },
+            {
+              "id": "4fc867eb-6e8f-4dd6-a412-734f0d811afa",
+              "name": "error_message",
+              "value": "Business data failed validation. Report generation blocked",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        208
+      ],
+      "id": "8dd4c9bf-288c-4672-a8b5-bc9e6c15d1ea",
+      "name": "Build Validation Error"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n    company_name,\n    reporting_month,\n    currency,\n    total_revenue,\n    total_expenses,\n    total_invoices,\n    overdue_invoices,\n    completed_projects,\n    active_projects\nFROM monthly_business_metrics\nWHERE reporting_month = $1;\n",
+        "options": {
+          "queryReplacement": "={{ $json.reporting_month }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.8,
+      "position": [
+        -1040,
+        288
+      ],
+      "id": "4225c7f7-db1a-4fec-8ad6-99ec3d0d0bf6",
+      "name": "Fetch Monthly Business Data",
+      "credentials": {
+        "postgres": {
+          "id": "postgres-account",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ff848714-1ba0-4f43-90d9-7cedfb11ea65",
+              "name": "reporting_month",
+              "value": "2026-10",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -1248,
+        288
+      ],
+      "id": "efceda74-60ba-40e6-a643-397b5cd26d4a",
+      "name": "Set Reporting Parameters"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a senior business analyst preparing a monthly management report for company executives.\n\nYour task is to analyze the validated business data provided below and produce an accurate, insightful, professional report suitable for management decision-making.\n\n## BUSINESS DATA\n\n**Company:** {{ $json.company_name }}  \n**Reporting Month:** {{ $json.reporting_month }}  \n**Currency:** {{ $('Fetch Monthly Business Data').first().json.currency }}\n\n### Financial Performance\n- Revenue: {{ $json.total_revenue }}\n- Expenses: {{ $json.total_expenses }}\n- Gross Profit: {{ $json.gross_profit }}\n\n### Invoice Performance\n- Total Invoices: {{ $json.total_invoices }}\n- Overdue Invoices: {{ $json.overdue_invoices }}\n- Overdue Invoice Rate: {{ $json.overdue_invoice_rate }}%\n\n### Project Performance\n- Completed Projects: {{ $json.completed_projects }}\n- Active Projects: {{ $json.active_projects }}\n- Total Projects: {{ $json.total_projects }}\n- Project Completion Rate: {{ $json.project_completion_rate }}%\n\n## REPORT STRUCTURE\n\n### 1. Executive Summary\nProvide a concise overview of the company's financial and operational performance during the reporting period.\n\nHighlight:\n- The most significant financial observations.\n- The most important operational observations.\n- Areas requiring management attention.\n\nFocus on the most relevant findings rather than repeating every metric.\n\n### 2. Financial Performance\nAnalyze revenue, expenses, gross profit, and gross profit margin where calculable.\n\nRequirements:\n- Explain the financial figures clearly.\n- Calculate gross profit margin using gross profit divided by revenue, multiplied by 100, when revenue is greater than zero.\n- Distinguish gross profit from operating profit.\n- Do not assume that expenses represent direct costs or operating expenses unless their classification is provided.\n- Do not describe gross profit as operating profit or imply that it represents net income.\n\n### 3. Operational Performance\nAnalyze:\n- Invoice performance.\n- Overdue invoices.\n- Project completion.\n- Active projects.\n\nExplain the operational significance of the metrics without assuming that active projects are delayed or underperforming.\n\nWhere useful, explain what the available figures indicate about operational activity and what additional information would be required for a stronger assessment.\n\n### 4. Risks and Concerns\nIdentify potential business risks based only on the supplied figures.\n\nFor each risk:\n- State the supporting observation.\n- Explain its possible business implication.\n- Identify any missing information that prevents a definitive conclusion.\n\nDistinguish between confirmed observations and potential risks.\n\nDo not exaggerate risks or present possibilities as established facts.\n\n### 5. Recommended Management Actions\nProvide exactly three specific, practical, prioritized management actions.\n\nEach recommendation must:\n- Be linked to a confirmed observation in the data.\n- Explain why the action is necessary.\n- Describe the intended business outcome.\n- Avoid unsupported assumptions.\n- Be realistic and actionable for company management.\n\nPrioritize recommendations according to their potential business importance.\n\n## ANALYSIS RULES\n\n- Use only the supplied business data.\n- Never invent figures, events, business explanations, or company information.\n- Always use the supplied currency. Never assume USD, EUR, or another currency.\n- Distinguish confirmed facts from analytical interpretations.\n- Do not claim growth, decline, or improvement without historical comparison data.\n- Do not assume that all overdue invoices have equal financial risk.\n- Do not interpret active projects as delayed projects.\n- Calculate additional metrics only when the required inputs are available.\n- Clearly identify missing information and analytical limitations.\n- Do not describe gross profit as operating profit.\n- Do not assume expenses are direct costs, cost of goods sold, or operating expenses without supporting information.\n- Do not calculate financial ratios when the required denominator is zero or unavailable.\n- Do not invent missing values or replace unknown values with zero.\n- Use clear, concise, executive-level business language.\n- Avoid generic recommendations that are not supported by the data.\n- Never present assumptions as confirmed facts.\n\n## OUTPUT REQUIREMENTS\n\nReturn a valid JSON object matching the Structured Output Parser schema.\n\nThe JSON object must contain the following fields:\n\n- `company_name`: string\n- `reporting_month`: string\n- `currency`: string\n- `executive_summary`: string\n- `financial_performance`: object containing:\n  - `revenue`: number\n  - `expenses`: number\n  - `gross_profit`: number\n  - `gross_profit_margin`: number\n  - `analysis`: string\n- `operational_performance`: string\n- `risks`: array of objects containing:\n  - `observation`: string\n  - `business_implication`: string\n  - `limitation`: string\n- `recommendations`: array of exactly three objects containing:\n  - `priority`: integer\n  - `action`: string\n  - `reason`: string\n  - `expected_outcome`: string\n- `data_limitations`: array of strings\n\nAdditional formatting rules:\n\n- Return valid JSON only.\n- Do not wrap JSON in Markdown code fences.\n- Do not include introductory or concluding text outside the JSON.\n- Use numeric values for financial metrics.\n- Return percentages as numbers without the percentage symbol.\n- Use the supplied currency consistently.\n- Do not invent missing values.\n- If a financial metric cannot be calculated, use a neutral numeric placeholder only if required by the schema, and explicitly explain that the metric is unavailable in `data_limitations`.\n- Ensure all required fields are present.\n- Ensure the output is valid JSON and can be parsed by the Structured Output Parser.",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -304,
+        -320
+      ],
+      "id": "e3c0091a-f2e1-41c1-8928-d4b2ca63070c",
+      "name": "Generate AI Management Report",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -320,
+        -112
+      ],
+      "id": "24c89635-ddd8-4800-95ba-0370e34e9bba",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "google-gemini-account",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"company_name\": {\n      \"type\": \"string\"\n    },\n    \"reporting_month\": {\n      \"type\": \"string\"\n    },\n    \"currency\": {\n      \"type\": \"string\"\n    },\n    \"executive_summary\": {\n      \"type\": \"string\"\n    },\n    \"financial_performance\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"revenue\": {\n          \"type\": \"number\"\n        },\n        \"expenses\": {\n          \"type\": \"number\"\n        },\n        \"gross_profit\": {\n          \"type\": \"number\"\n        },\n        \"gross_profit_margin\": {\n          \"type\": \"number\"\n        },\n        \"analysis\": {\n          \"type\": \"string\"\n        }\n      },\n      \"required\": [\n        \"revenue\",\n        \"expenses\",\n        \"gross_profit\",\n        \"gross_profit_margin\",\n        \"analysis\"\n      ],\n      \"additionalProperties\": false\n    },\n    \"operational_performance\": {\n      \"type\": \"string\"\n    },\n    \"risks\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"observation\": {\n            \"type\": \"string\"\n          },\n          \"business_implication\": {\n            \"type\": \"string\"\n          },\n          \"limitation\": {\n            \"type\": \"string\"\n          }\n        },\n        \"required\": [\n          \"observation\",\n          \"business_implication\",\n          \"limitation\"\n        ],\n        \"additionalProperties\": false\n      }\n    },\n    \"recommendations\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"priority\": {\n            \"type\": \"integer\"\n          },\n          \"action\": {\n            \"type\": \"string\"\n          },\n          \"reason\": {\n            \"type\": \"string\"\n          },\n          \"expected_outcome\": {\n            \"type\": \"string\"\n          }\n        },\n        \"required\": [\n          \"priority\",\n          \"action\",\n          \"reason\",\n          \"expected_outcome\"\n        ],\n        \"additionalProperties\": false\n      },\n      \"minItems\": 3,\n      \"maxItems\": 3\n    },\n    \"data_limitations\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    }\n  },\n  \"required\": [\n    \"company_name\",\n    \"reporting_month\",\n    \"currency\",\n    \"executive_summary\",\n    \"financial_performance\",\n    \"operational_performance\",\n    \"risks\",\n    \"recommendations\",\n    \"data_limitations\"\n  ],\n  \"additionalProperties\": false\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -160,
+        -48
+      ],
+      "id": "288de721-2d7d-40c5-abcb-c17db6e8f5a4",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -144,
+        384
+      ],
+      "id": "91070af7-cc08-4c8a-a1c1-828ec2a6345f",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "openai-account",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a senior business analyst preparing a monthly management report for company executives.\n\nYour task is to analyze the validated business data provided below and produce an accurate, insightful, professional report suitable for management decision-making.\n\n## BUSINESS DATA\n\n**Company:** {{ $json.company_name }}  \n**Reporting Month:** {{ $json.reporting_month }}  \n**Currency:** {{ $json.currency }}\n\n### Financial Performance\n- Revenue: {{ $json.total_revenue }}\n- Expenses: {{ $json.total_expenses }}\n- Gross Profit: {{ $json.gross_profit }}\n\n### Invoice Performance\n- Total Invoices: {{ $json.total_invoices }}\n- Overdue Invoices: {{ $json.overdue_invoices }}\n- Overdue Invoice Rate: {{ $json.overdue_invoice_rate }}%\n\n### Project Performance\n- Completed Projects: {{ $json.completed_projects }}\n- Active Projects: {{ $json.active_projects }}\n- Total Projects: {{ $json.total_projects }}\n- Project Completion Rate: {{ $json.project_completion_rate }}%\n\n## REPORT STRUCTURE\n\n### 1. Executive Summary\nProvide a concise overview of the company's financial and operational performance during the reporting period.\n\nHighlight:\n- The most significant financial observations.\n- The most important operational observations.\n- Areas requiring management attention.\n\nFocus on the most relevant findings rather than repeating every metric.\n\n### 2. Financial Performance\nAnalyze revenue, expenses, gross profit, and gross profit margin where calculable.\n\nRequirements:\n- Explain the financial figures clearly.\n- Calculate gross profit margin using gross profit divided by revenue, multiplied by 100, when revenue is greater than zero.\n- Distinguish gross profit from operating profit.\n- Do not assume that expenses represent direct costs or operating expenses unless their classification is provided.\n- Do not describe gross profit as operating profit or imply that it represents net income.\n\n### 3. Operational Performance\nAnalyze:\n- Invoice performance.\n- Overdue invoices.\n- Project completion.\n- Active projects.\n\nExplain the operational significance of the metrics without assuming that active projects are delayed or underperforming.\n\nWhere useful, explain what the available figures indicate about operational activity and what additional information would be required for a stronger assessment.\n\n### 4. Risks and Concerns\nIdentify potential business risks based only on the supplied figures.\n\nFor each risk:\n- State the supporting observation.\n- Explain its possible business implication.\n- Identify any missing information that prevents a definitive conclusion.\n\nDistinguish between confirmed observations and potential risks.\n\nDo not exaggerate risks or present possibilities as established facts.\n\n### 5. Recommended Management Actions\nProvide exactly three specific, practical, prioritized management actions.\n\nEach recommendation must:\n- Be linked to a confirmed observation in the data.\n- Explain why the action is necessary.\n- Describe the intended business outcome.\n- Avoid unsupported assumptions.\n- Be realistic and actionable for company management.\n\nPrioritize recommendations according to their potential business importance.\n\n## ANALYSIS RULES\n\n- Use only the supplied business data.\n- Never invent figures, events, business explanations, or company information.\n- Always use the supplied currency. Never assume USD, EUR, or another currency.\n- Distinguish confirmed facts from analytical interpretations.\n- Do not claim growth, decline, or improvement without historical comparison data.\n- Do not assume that all overdue invoices have equal financial risk.\n- Do not interpret active projects as delayed projects.\n- Calculate additional metrics only when the required inputs are available.\n- Clearly identify missing information and analytical limitations.\n- Do not describe gross profit as operating profit.\n- Do not assume expenses are direct costs, cost of goods sold, or operating expenses without supporting information.\n- Do not calculate financial ratios when the required denominator is zero or unavailable.\n- Do not invent missing values or replace unknown values with zero.\n- Use clear, concise, executive-level business language.\n- Avoid generic recommendations that are not supported by the data.\n- Never present assumptions as confirmed facts.\n\n## OUTPUT REQUIREMENTS\n\nReturn a valid JSON object matching the Structured Output Parser schema.\n\nThe JSON object must contain the following fields:\n\n- `company_name`: string\n- `reporting_month`: string\n- `currency`: string\n- `executive_summary`: string\n- `financial_performance`: object containing:\n  - `revenue`: number\n  - `expenses`: number\n  - `gross_profit`: number\n  - `gross_profit_margin`: number\n  - `analysis`: string\n- `operational_performance`: string\n- `risks`: array of objects containing:\n  - `observation`: string\n  - `business_implication`: string\n  - `limitation`: string\n- `recommendations`: array of exactly three objects containing:\n  - `priority`: integer\n  - `action`: string\n  - `reason`: string\n  - `expected_outcome`: string\n- `data_limitations`: array of strings\n\nAdditional formatting rules:\n\n- Return valid JSON only.\n- Do not wrap JSON in Markdown code fences.\n- Do not include introductory or concluding text outside the JSON.\n- Use numeric values for financial metrics.\n- Return percentages as numbers without the percentage symbol.\n- Use the supplied currency consistently.\n- Do not invent missing values.\n- If a financial metric cannot be calculated, use a neutral numeric placeholder only if required by the schema, and explicitly explain that the metric is unavailable in `data_limitations`.\n- Ensure all required fields are present.\n- Ensure the output is valid JSON and can be parsed by the Structured Output Parser.",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -144,
+        192
+      ],
+      "id": "520b2d0e-05b2-4cfe-abef-a374fbe8a2e2",
+      "name": "Generate AI Report - Fallback"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst report = $json.output ?? $json;\n\nconst money = (value) =>\n  new Intl.NumberFormat('en-US', {\n    style: 'currency',\n    currency: report.currency || 'TND',\n    maximumFractionDigits: 2\n  }).format(value);\n\nconst escapeHtml = (value) =>\n  String(value ?? '').replace(/[&<>\"']/g, char => ({\n    '&': '&amp;',\n    '<': '&lt;',\n    '>': '&gt;',\n    '\"': '&quot;',\n    \"'\": '&#39;'\n  })[char]);\n\nconst risks = (report.risks || []).map(risk => `\n  <section class=\"item\">\n    <h3>${escapeHtml(risk.observation)}</h3>\n    <p><strong>Business implication:</strong> ${escapeHtml(risk.business_implication)}</p>\n    <p><strong>Limitation:</strong> ${escapeHtml(risk.limitation)}</p>\n  </section>\n`).join('');\n\nconst recommendations = (report.recommendations || [])\n  .sort((a, b) => a.priority - b.priority)\n  .map(item => `\n    <section class=\"item\">\n      <h3>Priority ${item.priority}: ${escapeHtml(item.action)}</h3>\n      <p><strong>Reason:</strong> ${escapeHtml(item.reason)}</p>\n      <p><strong>Expected outcome:</strong> ${escapeHtml(item.expected_outcome)}</p>\n    </section>\n  `).join('');\n\nconst html = `\n<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n<title>Monthly Management Report</title>\n<style>\n  body {\n    font-family: Arial, sans-serif;\n    color: #243247;\n    margin: 40px;\n    line-height: 1.6;\n  }\n  h1 { color: #17365d; }\n  h2 {\n    color: #17365d;\n    border-bottom: 2px solid #dce5ef;\n    padding-bottom: 8px;\n    margin-top: 30px;\n  }\n  .meta { color: #667085;\n    font-size: 14px;\n    margin-bottom: 25px;\n  }\n  .metrics {\n    display: grid;\n    grid-template-columns: repeat(3, 1fr);\n    gap: 12px;\n  }\n  .metric {\n    border: 1px solid #dce5ef;\n    border-radius: 8px;\n    padding: 15px;\n  }\n  .value { font-size: 20px; font-weight: bold; margin-top: 4px; }\n  .item {\n    border-left: 3px solid #4676a9;\n    padding: 8px 16px;\n    margin: 14px 0;\n    background: #f7f9fc;\n  }\n  .footer {\n    margin-top: 40px;\n    color: #667085;\n    font-size: 12px;\n    border-top: 1px solid #dce5ef;\n    padding-top: 12px;\n  }\n</style>\n</head>\n<body>\n\n<h1>Monthly Management Report</h1>\n<p class=\"meta\">\n  ${escapeHtml(report.company_name)} | Reporting Period: ${escapeHtml(report.reporting_month)}\n</p>\n\n<h2>1. Executive Summary</h2>\n<p>${escapeHtml(report.executive_summary)}</p>\n\n<h2>2. Financial Performance</h2>\n<div class=\"metrics\">\n  <div class=\"metric\">\n    Revenue<div class=\"value\">${money(report.financial_performance.revenue)}</div>\n  </div>\n  <div class=\"metric\">\n    Expenses<div class=\"value\">${money(report.financial_performance.expenses)}</div>\n  </div>\n  <div class=\"metric\">\n    Gross Profit<div class=\"value\">${money(report.financial_performance.gross_profit)}</div>\n  </div>\n</div>\n<p><strong>Gross Profit Margin:</strong> ${escapeHtml(report.financial_performance.gross_profit_margin)}%</p>\n<p>${escapeHtml(report.financial_performance.analysis)}</p>\n\n<h2>3. Operational Performance</h2>\n<p>${escapeHtml(report.operational_performance)}</p>\n\n<h2>4. Risks and Concerns</h2>\n${risks || '<p>No risks were identified.</p>'}\n\n<h2>5. Recommended Management Actions</h2>\n${recommendations}\n\n<h2>Data Limitations</h2>\n<ul>\n${(report.data_limitations || []).map(item =>\n  `<li>${escapeHtml(item)}</li>`\n).join('')}\n</ul>\n\n<div class=\"footer\">\n  Generated by OmniFlow AI | Reporting period: ${escapeHtml(report.reporting_month)}\n</div>\n</body>\n</html>\n`;\n\nreturn {\n  json: {\n    ...report,\n    html_report: html\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        64,
+        -288
+      ],
+      "id": "ef66c5d9-b768-43ca-896c-0639eb49eb65",
+      "name": "Format Management Report"
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "html_report",
+        "options": {
+          "fileName": "index.html"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.2,
+      "position": [
+        48,
+        0
+      ],
+      "id": "28bf8497-b2a5-4eac-b58c-dac87c6845c1",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:3000/forms/chromium/convert/html",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "files",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "paperWidth",
+              "value": "8.27"
+            },
+            {
+              "name": "paperHeight",
+              "value": "11.7"
+            },
+            {
+              "name": "marginTop",
+              "value": "0.5"
+            },
+            {
+              "name": "marginBottom",
+              "value": "0.5"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "pdf"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        256,
+        0
+      ],
+      "id": "b1b56b09-ab76-4fa6-9305-a9594a830e9a",
+      "name": "Generate PDF Report"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first();\n\nitem.binary.pdf.fileName = 'Northstar_Management_Report_2026-10.pdf';\nitem.binary.pdf.mimeType = 'application/pdf';\n\nreturn item;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        272
+      ],
+      "id": "2f767a29-f158-44eb-9ade-c04c1a5c883e",
+      "name": "Set PDF Filename"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/reports/{{ $binary.pdf.fileName }}",
+        "dataPropertyName": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        576,
+        -80
+      ],
+      "id": "7107d18e-6b30-42ad-b6de-0ffb6477146a",
+      "name": "Save PDF Report"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO automation_execution_logs (\n    workflow_name,\n    company_name,\n    reporting_month,\n    execution_status,\n    report_filename,\n    execution_finished_at\n)\nVALUES (\n    '01 - Monthly Business Reporting',\n    $1,\n    $2,\n    'SUCCESS',\n    $3,\n    CURRENT_TIMESTAMP\n);",
+        "options": {
+          "queryReplacement": "={{ [   $('Fetch Monthly Business Data').first().json.company_name,   $('Fetch Monthly Business Data').first().json.reporting_month,   $('Set PDF Filename').first().binary.pdf.fileName ] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.8,
+      "position": [
+        640,
+        208
+      ],
+      "id": "767f7dbe-bceb-48da-9f6a-60bc2572758e",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "postgres-account",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Set Reporting Parameters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Business Data": {
+      "main": [
+        [
+          {
+            "node": "Calculate Business KPIs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Business KPIs": {
+      "main": [
+        [
+          {
+            "node": "Validate Business Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Business Data": {
+      "main": [
+        [
+          {
+            "node": "Generate AI Management Report",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Monthly Business Data": {
+      "main": [
+        [
+          {
+            "node": "Prepare Business Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Reporting Parameters": {
+      "main": [
+        [
+          {
+            "node": "Fetch Monthly Business Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate AI Management Report",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Generate AI Management Report",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate AI Management Report": {
+      "main": [
+        [
+          {
+            "node": "Format Management Report",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate AI Report - Fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate AI Report - Fallback",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Management Report": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Generate PDF Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate PDF Report": {
+      "main": [
+        [
+          {
+            "node": "Set PDF Filename",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set PDF Filename": {
+      "main": [
+        [
+          {
+            "node": "Save PDF Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save PDF Report": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "1.0.0",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

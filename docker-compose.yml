@@ -1,0 +1,40 @@
+services:
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    container_name: omniflow-gotenberg
+    restart: unless-stopped
+    ports:
+      - "${GOTENBERG_PORT:-3000}:3000"
+    environment:
+      - CHROMIUM_DISABLE_JAVASCRIPT=false
+      - LOG_LEVEL=info
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: omniflow-n8n
+    restart: unless-stopped
+    ports:
+      - "${N8N_PORT:-5678}:5678"
+    environment:
+      - N8N_HOST=${N8N_HOST:-localhost}
+      - N8N_PORT=${N8N_PORT:-5678}
+      - N8N_PROTOCOL=${N8N_PROTOCOL:-http}
+      - WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:5678/}
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE:-UTC}
+      - EXECUTIONS_DATA_PRUNE=true
+      - EXECUTIONS_DATA_MAX_AGE=336
+      - N8N_DEFAULT_BINARY_DATA_MODE=separate
+    volumes:
+      - ./n8n-data:/home/node/.n8n
+      - ./reports:/reports
+    extra_hosts:
+      # Allows containers to communicate with host machine services (e.g., local PostgreSQL on port 5432)
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      gotenberg:
+        condition: service_healthy

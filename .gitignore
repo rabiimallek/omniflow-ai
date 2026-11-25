@@ -1,0 +1,54 @@
+# ==============================================================================
+# OmniFlow AI - Git Ignore
+# ==============================================================================
+
+# Live n8n container data and storage (CRITICAL)
+n8n-data/
+n8n-backup/
+.n8n/
+*.metadata
+
+# Generated reports & local output (Keep folder structure via .gitkeep)
+reports/*
+!reports/.gitkeep
+Reports/*
+!Reports/.gitkeep
+*.pdf
+*.html
+
+# Raw workflow dumps outside workflows directory
+Monthly Business Reporting.json
+*.workflow.json.bak
+
+# Secrets and environment files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+
+# Database dumps and local database files
+*.dump
+*.sql.gz
+*.db
+*.sqlite
+
+# Operating System files
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Editor and IDE configurations
+.idea/
+.vscode/
+*.suo
+*.user
+*.workspace
+
+# Logs and runtime artifacts
+*.log
+logs/
+tmp/
+scratch/
