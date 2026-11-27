@@ -1,21 +1,21 @@
 # OmniFlow AI
 
-> **Automated end-to-end business reporting pipeline powered by n8n, PostgreSQL, Google Gemini, and Gotenberg.**
+> **Automated end-to-end business reporting pipeline powered by n8n, PostgreSQL, Google Gemini, Ollama, and Gotenberg.**
 
 ---
 
 ## 1. Project Overview
 
-**OmniFlow AI** is an intelligent workflow automation system built to transform raw financial and operational data into publication-ready executive management reports. 
+**OmniFlow AI** is an intelligent workflow automation system built to transform raw financial and operational data into publication-ready executive management reports.
 
 In traditional corporate environments, compiling monthly business reports requires manual database queries, spreadsheet calculations, drafting commentary, formatting presentations, and exporting PDFs. OmniFlow AI automates this entire lifecycle into a single deterministic, audit-logged workflow.
 
 ### Core Objectives
 - **Zero-Touch Reporting**: Eliminate repetitive manual report authoring.
 - **Data Integrity**: Enforce mathematical validation rules on input metrics before triggering AI synthesis.
-- **Deterministic AI Analysis**: Constrain Large Language Model output using JSON Schema parsing to ensure consistent report structures.
+- **Resilient Dual-Tier AI**: Cloud inference via Google Gemini with automated fallback to a local Ollama LLM and deterministic validation engine.
 - **Production-Grade PDF Generation**: Render HTML/CSS reports into crisp vector PDFs using a headless Chromium service.
-- **Auditability**: Maintain full historical traceability of every workflow execution inside PostgreSQL.
+- **Complete Lifecycle Auditability**: Maintain full historical traceability for both successful executions and validation failures inside PostgreSQL.
 
 ---
 
@@ -32,20 +32,24 @@ flowchart TD
         Trigger(["Manual / Scheduled Trigger"])
         Params["Set Reporting Period (YYYY-MM)"]
         Query["Fetch Monthly Metrics (SQL)"]
-        Calc["Calculate Derived KPIs<br/>• Gross Profit<br/>• Overdue Rate<br/>• Completion Rate"]
+        Calc["Calculate Derived KPIs<br/>• Gross Profit & Margin<br/>• Overdue & Project Rates"]
         Guard{"Validate Business Data"}
         FailState["Build Validation Error Record"]
+        LogFail["Log Validation Failure<br/>(VALIDATION_FAILED)"]
         
         LLM["Google Gemini Model<br/>(Structured JSON Prompt)"]
-        FallbackLLM["OpenAI Fallback Model<br/>(OnError Strategy)"]
+        OllamaLLM["Ollama Fallback Model<br/>(qwen2.5:1.5b)"]
+        DeterministicGen["Deterministic JS Validator<br/>& Evidence Synthesizer"]
+        
         HTMLGen["Format Responsive HTML Report"]
         BinaryFile["Convert to File Buffer"]
         SaveDisk["Save PDF to Host Storage"]
-        LogSuccess["Record Execution Status"]
+        LogSuccess["Record Execution Status<br/>(SUCCESS)"]
     end
 
     subgraph Services ["External & Microservices"]
         GeminiAPI["Google AI Studio (Gemini Flash)"]
+        LocalOllama["Local Ollama Service (:11434)"]
         Gotenberg["Gotenberg Container (Chromium Headless)"]
     end
 
@@ -56,17 +60,24 @@ flowchart TD
     Calc --> Guard
     
     Guard -->|Invalid| FailState
+    FailState --> LogFail
+    LogFail -.->|Insert Failure Log| LogsTable
+    
     Guard -->|Valid| LLM
 
     LLM -.->|Inference| GeminiAPI
-    LLM -->|Failover| FallbackLLM
     LLM -->|Validated JSON Schema| HTMLGen
+
+    LLM -->|On Error / Failover| OllamaLLM
+    OllamaLLM -.->|Local Inference| LocalOllama
+    OllamaLLM --> DeterministicGen
+    DeterministicGen --> HTMLGen
 
     HTMLGen --> BinaryFile
     BinaryFile -->|HTTP POST Multipart| Gotenberg
     Gotenberg -->|Binary PDF Stream| SaveDisk
     SaveDisk --> LogSuccess
-    LogSuccess -.->|Insert Audit Row| LogsTable
+    LogSuccess -.->|Insert Success Log| LogsTable
 ```
 
 ---
@@ -77,8 +88,9 @@ flowchart TD
 | :--- | :--- | :--- |
 | **Orchestration** | [n8n](https://n8n.io/) | Workflow orchestration, LangChain nodes, and logic branching |
 | **Database** | [PostgreSQL 18](https://www.postgresql.org/) | Relational metrics storage and audit execution logging |
-| **Generative AI** | [Google Gemini](https://ai.google.dev/) (`gemini-1.5-flash`) | Contextual analysis, risk evaluation, and recommendations |
-| **Fallback AI** | [OpenAI](https://openai.com/) (`gpt-4o-mini`) | High-availability fallback branch via `onError` routing |
+| **Generative AI (Primary)** | [Google Gemini](https://ai.google.dev/) (`gemini-1.5-flash` / `gemini-3.8-flash`) | Contextual analysis, risk evaluation, and recommendations |
+| **Generative AI (Fallback)** | [Ollama](https://ollama.ai/) (`qwen2.5:1.5b`) | Offline, privacy-first local fallback LLM |
+| **Deterministic Validation** | Node.js / JavaScript | Strict metric verification, factual guardrails, and data synthesis |
 | **PDF Rendering** | [Gotenberg 8](https://gotenberg.dev/) | Headless Chromium engine converting HTML/CSS into A4 PDF |
 | **Containerization**| [Docker & Compose](https://www.docker.com/) | Microservice isolation and host port mapping |
 | **Scripting** | PowerShell 7 / Bash | Environment initialization and bootstrap automation |
@@ -87,12 +99,13 @@ flowchart TD
 
 ## 4. Key Engineering Features
 
-- **Automated KPI Calculation**: Dynamically computes gross profits, overdue invoice percentages, and project completion ratios directly within workflow expressions.
+- **Automated KPI Calculation**: Dynamically computes gross profits, gross profit margin percentages, overdue invoice rates, and project completion ratios directly within workflow expressions.
 - **Pre-Execution Validation Gatekeeper**: Enforces strict conditional checks (`revenue > 0`, `overdue <= total`) before consuming LLM API tokens.
-- **Strict Structured Outputs**: Integrates LangChain's Structured Output Parser to force LLM responses into strict, strongly typed JSON objects.
-- **Resilient Multi-Model Architecture**: Implements graceful degradation—if the primary Gemini call encounters rate limits or API downtime, execution cascades to a secondary model.
+- **Zero-Loss Error Auditing**: Records both successful runs (`SUCCESS`) and validation rejections (`VALIDATION_FAILED`) in PostgreSQL with full diagnostic context.
+- **Dual-Tier AI Architecture with Offline Fallback**: Features automatic failover from cloud-based Google Gemini to a local Ollama instance (`qwen2.5:1.5b`).
+- **Deterministic Evidence-Based Fallback**: An integrated JavaScript validation node enforces that metric figures remain mathematically anchored and prevents LLM hallucinations.
+- **Strict Structured Outputs**: Integrates LangChain's Structured Output Parser to force responses into validated, strongly typed JSON objects.
 - **Vector PDF Output**: Generates cleanly styled executive PDFs complete with KPI cards, risk analysis callouts, and prioritized action plans.
-- **Dual-Phase Audit Trail**: Logs execution statuses (`SUCCESS`, `FAILED`), output filenames, and timestamps directly into PostgreSQL.
 
 ---
 
@@ -127,7 +140,7 @@ CREATE TABLE automation_execution_logs (
     workflow_name VARCHAR(255) NOT NULL,
     company_name VARCHAR(255),
     reporting_month VARCHAR(7),
-    execution_status VARCHAR(50) NOT NULL,
+    execution_status VARCHAR(50) NOT NULL, -- 'SUCCESS', 'VALIDATION_FAILED'
     report_filename VARCHAR(255),
     error_message TEXT,
     execution_started_at TIMESTAMP WITH TIME ZONE,
@@ -170,6 +183,7 @@ omniflow-ai/
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
 - [PostgreSQL 14+](https://www.postgresql.org/) running locally on port `5432` (or via container).
 - A Google Gemini API key from [Google AI Studio](https://aistudio.google.com/).
+- (Optional) [Ollama](https://ollama.ai/) running locally on port `11434` with `qwen2.5:1.5b`.
 
 ### 2. Environment Setup
 ```powershell
@@ -202,6 +216,7 @@ Access points:
 4. Configure credentials in n8n for:
    - **Postgres** (Host: `host.docker.internal`, Port: `5432`)
    - **Google Gemini(PaLM) Api** (Your Google AI API Key)
+   - **Ollama** (Base URL: `http://host.docker.internal:11434`)
 5. Click **Execute workflow** to generate the executive report.
 6. The resulting PDF is stored in `./reports/Northstar_Management_Report_2026-10.pdf`.
 
@@ -220,23 +235,7 @@ The generated PDF report provides an executive summary, segmented KPI metrics, o
 
 ---
 
-## 9. Current Limitations & Roadmap
-
-### Limitations
-- **Single-Month Scope**: The current pipeline processes one reporting month at a time without multi-month comparative variance calculations.
-- **Local Filesystem Output**: PDF output is written directly to the host volume rather than being dispatched to cloud object storage (S3/GCS) or email recipients.
-- **Manual Triggering**: Baseline configuration uses a manual trigger rather than a cron-based schedule.
-
-### Future Roadmap
-- [ ] Add automated email delivery via SMTP / SendGrid node.
-- [ ] Integrate multi-period historical trend analysis into the LLM prompt.
-- [ ] Implement cloud storage sync (AWS S3 / Google Cloud Storage).
-- [ ] Add webhook trigger for automated end-of-month accounting software webhooks.
-- [ ] Add Slack / Microsoft Teams summary notification cards.
-
----
-
-## 10. License
+## 9. License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 

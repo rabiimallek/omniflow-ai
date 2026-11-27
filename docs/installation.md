@@ -10,9 +10,15 @@ This guide details how to configure, run, and verify OmniFlow AI on Windows 11 o
    - Ensure Docker Desktop is installed and running with WSL2 backend or Hyper-V.
 2. **PostgreSQL (v14+)**:
    - Local installation on host (PostgreSQL 18 tested) or a containerized instance listening on port `5432`.
-3. **API Credentials**:
-   - Google Gemini API Key from [Google AI Studio](https://aistudio.google.com/).
-   - (Optional) OpenAI API Key for fallback resilience.
+3. **Google Gemini API Key**:
+   - Obtain from [Google AI Studio](https://aistudio.google.com/).
+4. **Ollama (Local Fallback LLM)**:
+   - Install [Ollama](https://ollama.ai/) on your host machine.
+   - Pull the fallback model:
+     ```bash
+     ollama pull qwen2.5:1.5b
+     ```
+   - Ensure Ollama is running on port `11434` (default).
 
 ---
 
@@ -40,8 +46,6 @@ Connect to your local PostgreSQL instance and execute the schema and sample data
 & "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -d postgres -f database\sample_data.sql
 ```
 
-Or run via any standard PostgreSQL client (pgAdmin, DBeaver).
-
 ---
 
 ### Step 3: Launch Containers via Docker Compose
@@ -67,12 +71,12 @@ You should see:
 Open your browser at `http://localhost:5678`.
 
 1. **PostgreSQL Credentials**:
-   - In n8n, navigate to **Credentials** -> **New Credential** -> **Postgres**.
-   - Host: `host.docker.internal` (allows container to talk to Windows host).
+   - Navigate to **Credentials** -> **New Credential** -> **Postgres**.
+   - Host: `host.docker.internal`
    - Port: `5432`
-   - Database: `postgres` (or your configured database name).
+   - Database: `postgres`
    - User & Password: Your PostgreSQL username and password.
-   - SSL: `disable` (for local environments).
+   - SSL: `disable` (for local development).
    - Name: `Postgres account`.
 
 2. **Google Gemini (PaLM) Credentials**:
@@ -80,10 +84,10 @@ Open your browser at `http://localhost:5678`.
    - API Key: Insert your Google AI Studio API key.
    - Name: `Google Gemini(PaLM) Api account`.
 
-3. **OpenAI Credentials (Optional Fallback)**:
-   - Navigate to **Credentials** -> **New Credential** -> **OpenAI**.
-   - API Key: Insert your OpenAI API key.
-   - Name: `OpenAI account`.
+3. **Ollama Credentials (Local Fallback)**:
+   - Navigate to **Credentials** -> **New Credential** -> **Ollama**.
+   - Base URL: `http://host.docker.internal:11434`
+   - Name: `Ollama account`.
 
 ---
 
@@ -94,4 +98,4 @@ Open your browser at `http://localhost:5678`.
 3. Verify that the nodes reference your newly created credentials.
 4. Click **Execute workflow**.
 5. Once complete, check the `./reports` directory on your host to view the generated PDF report (`Northstar_Management_Report_2026-10.pdf`).
-6. Query `automation_execution_logs` in PostgreSQL to verify the audit log entry.
+6. Query `automation_execution_logs` in PostgreSQL to view the audit log entry.

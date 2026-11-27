@@ -33,7 +33,7 @@ DO UPDATE SET
     active_projects = EXCLUDED.active_projects,
     currency = EXCLUDED.currency;
 
--- Seed Sample Execution Log (historical demonstration baseline)
+-- Seed Sample Execution Logs (Demonstrating SUCCESS and VALIDATION_FAILED statuses)
 INSERT INTO automation_execution_logs (
     workflow_name,
     company_name,
@@ -44,13 +44,24 @@ INSERT INTO automation_execution_logs (
     execution_started_at,
     execution_finished_at
 )
-VALUES (
+VALUES 
+(
     '01 - Monthly Business Reporting',
-    ('Northstar Business Services'),
+    'Northstar Business Services',
     '2026-09',
     'SUCCESS',
     'Northstar_Management_Report_2026-09.pdf',
     NULL,
     CURRENT_TIMESTAMP - INTERVAL '30 days' - INTERVAL '5 minutes',
     CURRENT_TIMESTAMP - INTERVAL '30 days'
+),
+(
+    '01 - Monthly Business Reporting',
+    'Northstar Business Services',
+    '2026-07',
+    'VALIDATION_FAILED',
+    NULL,
+    'Business data failed validation. Report generation blocked',
+    CURRENT_TIMESTAMP - INTERVAL '60 days' - INTERVAL '1 minute',
+    CURRENT_TIMESTAMP - INTERVAL '60 days'
 );
